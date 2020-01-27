@@ -1,0 +1,91 @@
+enable
+
+clock set 09:30:00 1 JAN 2020
+
+conf t
+hostname S1
+enable secret cisco
+banner motd :Unauthorized Access is Prohibited:
+ip domain-name cisco.com
+no ip domain-lookup
+line con 0
+password cisco
+login
+exit
+crypto key generate rsa
+1024
+username cisco password 0 cisco
+line vty 0 15
+password cisco
+transport input ssh
+login local
+exit
+service password-encryption
+
+int vlan 100
+ip addr 192.168.100.11 255.255.255.0
+no shut
+exit
+
+ip default-gateway 192.168.100.3
+
+vtp mode server
+vtp version 2
+vtp domain cisco.com
+vtp password cisco
+
+vlan 1
+name DEFAULT
+exit
+vlan 10
+name SUPPLY
+exit
+vlan 15
+name HQ
+exit
+vlan 100
+name MGMT
+exit
+vlan 120
+name OPS
+exit
+
+spanning-tree mode rapid-pvst
+spanning-tree VLAN 100 root primary
+
+int g1/0/5
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+
+int g1/0/9
+switchport mode access
+switchport access vlan 100
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+int range g1/0/1-2
+channel-group 1 mode desirable
+int port-channel 1
+switchport mode trunk
+switchport trunk allowed vlan 1,10,15,100,120
+spanning-tree link-type point-to-point
+exit
+
+int range g1/0/3-4
+channel-group 3 mode ON
+int port-channel 3
+switchport mode trunk
+switchport trunk allowed vlan 1,10,15,100,120
+spanning-tree link-type point-to-point
+exit
+
+int range g1/0/23-24
+no switchport
+shutdown
+exit
+
+end
+clear spanning-tree detected-protocols

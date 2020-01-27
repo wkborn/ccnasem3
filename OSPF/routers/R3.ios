@@ -1,0 +1,65 @@
+enable
+
+clock set 09:30:00 1 JAN 2020
+
+conf t
+hostname R3
+enable secret cisco
+banner motd :Unauthorized Access is Prohibited:
+ip domain-name cisco.com
+no ip domain-lookup
+line con 0
+password cisco
+login
+exit
+crypto key generate rsa
+1024
+username cisco password 0 cisco
+line vty 0 4
+password cisco
+transport input ssh
+login local
+exit
+service password-encryption
+
+int g0/1
+ip addr 192.168.100.2 255.255.255.0
+standby version 2
+standby 100 ip 192.168.100.3
+no shut
+exit
+
+int s0/0/1
+ip addr 172.20.1.6 255.255.255.252
+bandwidth 128
+ip ospf cost 7500
+no shut
+exit
+
+int Loopback 4
+ip addr 10.10.4.1 255.255.255.0
+no shut
+exit
+
+int Loopback 5
+ip addr 10.10.5.1 255.255.255.0
+no shut
+exit
+
+int Loopback 6
+ip addr 10.10.6.1 255.255.255.0
+no shut
+exit
+
+router ospf 10
+router-id 3.3.3.3
+passive-interface g0/1
+network 172.20.1.0 0.0.0.3 area 0
+network 172.20.1.4 0.0.0.3 area 0
+network 192.168.100.0 0.0.0.255 area 0
+network 10.10.4.0 0.0.0.255 area 2
+network 10.10.5.0 0.0.0.255 area 2
+network 10.10.6.0 0.0.0.255 area 2
+area 2 range 10.10.0.0 255.255.248.0
+auto-cost reference-bandwidth 1000
+exit

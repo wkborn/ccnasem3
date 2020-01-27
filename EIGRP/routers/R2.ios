@@ -1,0 +1,75 @@
+enable
+
+clock set 9:30:00 1 JAN 2020
+
+conf t
+
+hostname R2
+enable secret cisco
+banner motd :Unauthorized Access is Prohibited:
+ip domain-name cisco.com
+no ip domain-lookup
+line con 0
+password cisco
+login
+exit
+crypto key generate rsa
+1024
+username cisco password 0 cisco
+line vty 0 4
+password cisco
+transport input ssh
+login local
+exit
+service password-encryption
+
+int s0/0/0
+ip addr 10.56.100.2 255.255.255.252
+ip hello-interval eigrp 20 20
+ip hold-time eigrp 20 60
+bandwidth 1024
+no shut
+exit
+
+int s0/0/1
+ip addr 10.56.100.5 255.255.255.252
+ip hello-interval eigrp 20 20
+ip hold-time eigrp 20 60
+bandwidth 1024
+no shut
+exit
+
+int g0/0
+ip addr 10.56.0.252 255.255.255.0
+standby version 2
+standby 10 priority 255
+standby 10 preempt
+standby 10 ip 10.56.0.254
+no shut
+exit
+
+int Loopback 16
+ip addr 10.56.16.1 255.255.255.0
+no shut
+exit
+int Loopback 17
+ip addr 10.56.17.1 255.255.255.0
+no shut
+exit
+int Loopback 18
+ip addr 10.56.18.1 255.255.255.0
+no shut
+exit
+
+ip route 0.0.0.0 0.0.0.0 200.200.109.225
+router eigrp 20
+eigrp router-id 2.2.2.2
+passive-interface g0/0
+network 10.56.100.0 0.0.0.3
+network 10.56.100.4 0.0.0.3
+network 10.15.16.0 0.0.0.255
+network 10.15.17.0 0.0.0.255
+network 10.15.18.0 0.0.0.255
+network 10.56.0.0 0.0.0.255
+exit
+

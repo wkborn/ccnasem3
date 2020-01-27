@@ -1,0 +1,66 @@
+enable
+
+clock set 9:30:00 1 JAN 2020
+
+conf t
+
+hostname S2
+enable secret cisco
+banner motd :Unauthorized Access is Prohibited:
+ip domain-name cisco.com
+no ip domain-lookup
+line con 0
+password cisco
+login
+exit
+crypto key generate rsa
+1024
+username cisco password 0 cisco
+line vty 0 4
+password cisco
+transport input ssh
+login local
+exit
+service password-encryption
+
+int vlan 1
+ip addr 10.56.0.241 255.255.255.0
+no shut
+exit
+
+ip default-gateway 10.56.0.254
+
+spanning-tree mode rapid-pvst
+spanning-tree VLAN 1 root primary
+
+int fa0/1
+switchport mode access
+switchport access vlan 1
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+int fa0/20
+switchport mode access
+switchport access vlan 1
+no shut
+exit
+
+int range fa0/23 - 24
+channel-group 4 mode on
+int port-channel 4
+switchport mode trunk
+switchport trunk allowed vlan 1
+spanning-tree link-type point-to-point
+exit
+
+int range fa0/21 - 22
+channel-group 5 mode auto
+int port-channel 5
+switchport mode trunk
+switchport trunk allowed vlan 1
+spanning-tree link-type point-to-point
+exit
+
+end
+clear spanning-tree detected-protocols
